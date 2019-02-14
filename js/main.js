@@ -1,13 +1,14 @@
 /*Stylesheet by Timothy Prestby 2019*/
+//declare global map variable
+var map=L.map('map',{
+    center: [20,0],
+    //sets the longitude and latitude of where the map center is
+    zoom: 2});
 
 //Initialize leaflet map
 function createMap(){
-    var map= L.map('map',{
-        center: [20,0],
-        //sets the longitude and latitude of where the map center is
-        zoom: 10
-    });
-
+   
+    
     //DEFINE THE TILE LAYER THAT WILL BE USED//
     L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
         //z is the zoom level
@@ -22,9 +23,9 @@ function createMap(){
             accessToken: 'pk.eyJ1IjoicHJlc3RpbW9qIiwiYSI6ImNqczNmYWE2bzJmNTYzeW8zOXNlMnVpOGwifQ.OrEG7gIMeP3N3sMaNY3EGw'
         }).addTo(map)};
 
+
+
 //function to retrieve data and place it on the map
-//Creates circles on the map
-//POINT TO LAYER
 function getData(map){
     //load the data
     $.ajax("data/CarbonFinal.geojson",{
@@ -40,7 +41,7 @@ function getData(map){
                             opacity: 1,
                             fillOpacity: 0.8
                         };
-            
+            console.log(response)
             L.geoJson(response, {
                 pointToLayer: function (feature, latlng){
                     //changes the point features of lat lon into point features
@@ -54,6 +55,8 @@ function getData(map){
     });
 };
 
+//ACCESS THE DATA FUNCTION IS CALLED
+getData(map);
 
 //When the document os ready, create the map!
 $(document).ready(createMap);
