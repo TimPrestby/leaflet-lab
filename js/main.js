@@ -2,6 +2,8 @@
 //declare global map variable
 var map=L.map('map',{
     center: [20,0],
+    //use fitbounds
+
     //sets the longitude and latitude of where the map center is
     zoom: 2});
 
@@ -16,7 +18,7 @@ function createMap(){
         //y is the vertical coordinate
         //id is the project id  
         attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-            maxZoom: 18,
+            maxZoom: 10,
             //sets the max zoom level of the map
             id: 'mapbox.light',
             //the id of the map to copy
@@ -25,6 +27,36 @@ function createMap(){
 
 
 
+//Function to add circle markers for point
+function createPropSymbols(data,map){
+    //Set marker options 
+    var attribute= '2000';
+    var geojsonMarkerOptions = {
+        radius: 8,
+        fillColor: "#293542",
+        color: "#000",
+        weight: 1,
+        opacity: 1,
+        fillOpacity: 0.8
+    };
+
+    L.geoJson(data, {
+        pointToLayer: function (feature, latlng){
+            //changes the point features of lat lon into point features
+
+            //For each feature, get the value for the attribute
+            var attValue = Number(feature.properties[attribute]);
+
+            console.log(feature.properties, attValue);
+
+            return L.circleMarker(latlng, geojsonMarkerOptions);
+            //return will bring the feature back to the argument and is then added on the following
+
+            
+        }
+    }).addTo(map);
+};
+
 //function to retrieve data and place it on the map
 function getData(map){
     //load the data
@@ -32,25 +64,8 @@ function getData(map){
         datatype: 'json',
         success: function(response){
                 //set callback function
-                        //create marker options
-                        var geojsonMarkerOptions = {
-                            radius: 8,
-                            fillColor: "#ff7800",
-                            color: "#000",
-                            weight: 1,
-                            opacity: 1,
-                            fillOpacity: 0.8
-                        };
-            console.log(response)
-            L.geoJson(response, {
-                pointToLayer: function (feature, latlng){
-                    //changes the point features of lat lon into point features
-                    return L.circleMarker(latlng, geojsonMarkerOptions)
-                    //return will bring the feature back to the argument and is then added on the following
-                }
-            }).addTo(map);
-            //the geoJson function's argument is the response which is all of the geoJSOn data from megacities
-        
+            createPropSymbols(response,map);
+            
         }
     });
 };
