@@ -1,5 +1,19 @@
 /*Stylesheet by Timothy Prestby 2019*/
-#map{
-    height: 100vh;
-    width: 100vw;
-}
+    /*////////////////ID STYLES////////////*/
+    #map{
+        height: 100vh;
+        width: 100vw;
+    }
+
+    #panel {
+        width: 16%;
+        padding: 20px;
+        display: inline-block;
+        vertical-align: top;
+    }
+
+    /*////////////////OTHER STYLES////////////*/
+
+    .leaflet-popup-content p {
+        margin: 0.2em 0;
+    }
