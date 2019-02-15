@@ -105,7 +105,37 @@ function createPropSymbols(data,map){
         }).addTo(map);
     };
 
-//function to retrieve data and place it on the map
+
+
+//ACCESS THE DATA FUNCTION IS CALLED
+getData(map);
+
+//////LESSON 3////////
+function createSequenceControls(map){
+    //create a range input element (the slider)
+    $('#panel').append("<input class='range-slider' type='range'>");
+
+    //set slider attributes
+    $('.range-slider').attr({
+        max: 13,
+        //Sets the number of slider values (starting and index 0)
+        min: 0,
+        //Sets the minimum number of slider values
+        value: 0,
+        //Sets the initial value of the slider bar
+        step: 1
+        //Sets what the slider will increment or decrement by
+    })
+
+    $('#panel').append('<button class="skip" id="reverse">Reverse</button>');
+    $('#panel').append('<button class="skip" id="forward">Skip</button>');
+    //Add buttons that provide additional sequence control
+    $('#reverse').html('<img src="img/backward.png">');
+    $('#forward').html('<img src="img/forward.png">');
+    //Style the buttons
+};
+
+//function to retrieve GeoJSON data and place it on the map
 function getData(map){
     //load the data
     $.ajax("data/CarbonFinal.geojson",{
@@ -113,13 +143,15 @@ function getData(map){
         success: function(response){
                 //set callback function
             createPropSymbols(response,map);
+            createSequenceControls(map);
             
         }
     });
 };
 
-//ACCESS THE DATA FUNCTION IS CALLED
-getData(map);
+
+
+
 
 //When the document os ready, create the map!
 $(document).ready(createMap);
