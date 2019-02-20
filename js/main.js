@@ -7,6 +7,10 @@ var map=L.map('map',{
     //sets the longitude and latitude of where the map center is
     zoom: 2});
 
+//Create variable attribute that can be accessed globally 
+
+var attributes;
+
 //Initialize leaflet map
 function createMap(){
    
@@ -116,7 +120,7 @@ function updatePropSymbols(map, attribute){
 //function to calculate the radius of each proportional symbol
 function calcPropRadius(attValue) {
     //scale factor to adjust symbol size evenly
-    var scaleFactor = 50;
+    var scaleFactor = 300;
     //area based on attribute value and scale factor
     var area = attValue * scaleFactor;
     //radius calculated based on area
@@ -147,7 +151,7 @@ function createPropSymbols(data,map, attributes){
 getData(map);
 
 //////LESSON 3////////
-function createSequenceControls(map){
+function createSequenceControls(map, attributes){
     //create a range input element (the slider)
     $('#panel').append("<input class='range-slider' type='range'>");
 
@@ -237,9 +241,7 @@ function getData(map){
     });
 };
 
-
-
-
+        
 
 //When the document os ready, create the map!
 $(document).ready(createMap);
