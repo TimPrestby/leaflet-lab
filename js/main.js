@@ -11,24 +11,44 @@ var map=L.map('map',{
 
 var attributes;
 
+//set two basemap styles to be used later
+var light =  L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+    //z is the zoom level
+    //x is the horizontal coordinate
+    //y is the vertical coordinate
+    //id is the project id  
+    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+        maxZoom: 10,
+        //sets the max zoom level of the map
+        id: 'mapbox.light',
+        //the id of the map to copy
+        accessToken: 'pk.eyJ1IjoicHJlc3RpbW9qIiwiYSI6ImNqczNmYWE2bzJmNTYzeW8zOXNlMnVpOGwifQ.OrEG7gIMeP3N3sMaNY3EGw'
+    });
+    //DEFINE THE TILE LAYER THAT WILL BE USED//
+var dark =  L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+    //z is the zoom level
+    //x is the horizontal coordinate
+    //y is the vertical coordinate
+    //id is the project id  
+    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+        maxZoom: 10,
+        //sets the max zoom level of the map
+        id: 'mapbox.mapbox-streets-v8',
+        //the id of the map to copy
+        accessToken: 'pk.eyJ1IjoicHJlc3RpbW9qIiwiYSI6ImNqczNmYWE2bzJmNTYzeW8zOXNlMnVpOGwifQ.OrEG7gIMeP3N3sMaNY3EGw'
+    });
+//dark style
+
+
 //Initialize leaflet map
 function createMap(){
    
     
-    //DEFINE THE TILE LAYER THAT WILL BE USED//
-    L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
-        //z is the zoom level
-        //x is the horizontal coordinate
-        //y is the vertical coordinate
-        //id is the project id  
-        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-            maxZoom: 10,
-            //sets the max zoom level of the map
-            id: 'mapbox.light',
-            //the id of the map to copy
-            accessToken: 'pk.eyJ1IjoicHJlc3RpbW9qIiwiYSI6ImNqczNmYWE2bzJmNTYzeW8zOXNlMnVpOGwifQ.OrEG7gIMeP3N3sMaNY3EGw'
-        }).addTo(map)};
+//define Thematic map layers 
 
+var PropLayer;
+
+var ChorLayer;
 
 //function to convert markers to circle markers
 function pointToLayer(feature, latlng, attributes){     
@@ -50,7 +70,7 @@ function pointToLayer(feature, latlng, attributes){
     options.radius=calcPropRadius(attValue);
 
     //creates the circle marker layer
-    var layer = L.circleMarker(latlng, options);
+    var PropLayer = L.circleMarker(latlng, options);
 
     //build popup content of the country
     var popupContent = "<p><b>Country:</b> " + feature.properties['Country Name'] + "</p>";
@@ -61,14 +81,14 @@ function pointToLayer(feature, latlng, attributes){
     //bind the popup to the circle marker
     //this math function rounds the values
 
-    layer.bindPopup(popupContent, {
+    PropLayer.bindPopup(popupContent, {
         offset: new L.Point(0,-options.radius)
     });
     //Binds the popup content to the popup object
     //The Offset ensures that the point is placed outside the radius of the proportional symbol
 
     //event listeners to open popup on hover
-      layer.on({
+      PropLayer.on({
         mouseover: function(){
             this.openPopup();
         },
@@ -84,20 +104,20 @@ function pointToLayer(feature, latlng, attributes){
     });
 
     //return the circle marker to the L.geoJson pointToLayer option
-    return layer;
+    return PropLayer;
 };
 
 //Function to resize the proportional symbols acording to attribute values
 function updatePropSymbols(map, attribute){
-    map.eachLayer(function(layer){
-        if (layer.feature && layer.feature.properties[attribute]){
+    map.eachLayer(function(PropLayer){
+        if (PropLayer.feature && PropLayer.feature.properties[attribute]){
             //update the layer style and popup
             
-            var props = layer.feature.properties;
+            var props = PropLayer.feature.properties;
 
             //update each feature's radius based on new attribute values
             var radius = calcPropRadius(props[attribute]);
-            layer.setRadius(radius);
+            PropLayer.setRadius(radius);
 
             //build popup content of the country
             var popupContent = "<p><b>Country:</b> " + props['Country Name'] + "</p>";
@@ -109,7 +129,7 @@ function updatePropSymbols(map, attribute){
             //this math function rounds the values
 
             //replace the layer popup
-            layer.bindPopup(popupContent, {
+            PropLayer.bindPopup(popupContent, {
                 offset: new L.Point(0,-radius)
             });
         };
@@ -241,7 +261,56 @@ function getData(map){
     });
 };
 
-        
+function getChoroData(map){
+    //load the chorpleth data
+    $.ajax("data/country.json",{
+        datatype: 'json',
+        success: function(response){
+                //set callback function
+
+                var attributes = processData(response);
+
+                createChoro(response,map,attribute);
+
+                createSequenceControls(map, attribute)
+            
+        }
+    });
+};
+
+//Add some Color to the Choropleth map
+function getColor(CO2){
+    return CO2 > 14 ? '#bd0026' :
+        CO2 > 12 ? '#f03b20' :
+        CO2 > 8 ? '#fd8d3c' :
+        CO2 > 4 ? '#fecc5c' :
+        CO2 > 0 ? '#ffffb2' :
+                '#ffffff';
+
+}
+
+function style(feature) {
+    return {
+        fillColor: getColor(attributes[index])
+    }
+};
+
+//control the layers
+
+var baseMaps = {
+    'Grayscale' : 
+}
+
+var overlayMaps = {
+    'Proportional Symbols' : PropLayer,
+    'Choropleth' : ChorLayer
+};
+//creates a dictionary of the map layers to be overlayed 
+
+L.control.layers(baseMap, overlayMaps).addTo(map);
+//WIll create a control menu that allows users to select which layers to turn on
+
+
 
 //When the document os ready, create the map!
 $(document).ready(createMap);
