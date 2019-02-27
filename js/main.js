@@ -52,12 +52,34 @@ var map = L.map('map',{
     
 //define Thematic map layers 
 
+var migrants= new L.LayerGroup();
+
 var PropLayer;
 
-var average;
+var average = new L.LayerGroup();
 
 var AverageLayer;
+
+
 var data;
+
+//FUNCTION To CREATE POPUP
+function createPopup(properties,attribute,PropLayer,radius) {
+    //build popup content of the country
+    var popupContent = "<p><b>City:</b> " + properties['City'] + "</p>";
+     //add formatted attribute to popup content string
+     var year = attribute;
+     popupContent += "<p><b>Number of Migrants Living in " + year + ":</b> " + (Math.floor(properties[attribute]*100)/100) + " </p>";
+     //bind the popup to the circle marker
+    //this math function rounds the values
+    
+    PropLayer.bindPopup(popupContent, {
+        offset: new L.Point(0,-radius)
+    //Binds the popup content to the popup object
+    //The Offset ensures that the point is placed outside the radius of the proportional symbol
+
+    });
+};
 
 //function to convert markers to circle markers
 function pointToLayer(feature, latlng, attributes,){     
@@ -72,7 +94,6 @@ function pointToLayer(feature, latlng, attributes,){
         fillOpacity: 0.5
     };
  
-
     //For each feature, get the value for the attribute
     var attValue = Number(feature.properties[attribute]);
 
@@ -82,27 +103,11 @@ function pointToLayer(feature, latlng, attributes,){
     //creates the circle marker layer
     var PropLayer = L.circleMarker(latlng, options);
 
-    //build popup content of the country
-    var popupContent = "<p><b>City:</b> " + feature.properties['City'] + "</p>";
-   console.log(feature.properties['City'])
-     //add formatted attribute to popup content string
-     var year = attribute;
-     console.log(attribute)
-     popupContent += "<p><b>Number of Migrants Living in " + year + ":</b> " + (Math.floor(feature.properties[attribute]*100)/100) + " </p>";
-     //bind the popup to the circle marker
-    //this math function rounds the values
-    
-    
+    createPopup(feature.properties, attribute, PropLayer, options.radius);
 
-
-    PropLayer.bindPopup(popupContent, {
-        offset: new L.Point(0,-options.radius)
-    });
-    //Binds the popup content to the popup object
-    //The Offset ensures that the point is placed outside the radius of the proportional symbol
 
     //event listeners to open popup on hover
-      PropLayer.on({
+    PropLayer.on({
         mouseover: function(){
             this.openPopup();
         },
@@ -111,10 +116,6 @@ function pointToLayer(feature, latlng, attributes,){
             this.closePopup();
         }
         //Close the popup when no longer mousing over
-
-     
-
-
     });
 
     //return the circle marker to the L.geoJson pointToLayer option
@@ -122,7 +123,7 @@ function pointToLayer(feature, latlng, attributes,){
 };
 
 //Function to resize the proportional symbols according to attribute values
-function updatePropSymbols(map, attribute){
+function updatePropSymbols(migrants, attribute){
     map.eachLayer(function(PropLayer){
         if (PropLayer.feature && PropLayer.feature.properties[attribute]){
             //update the layer style and popup
@@ -133,19 +134,13 @@ function updatePropSymbols(map, attribute){
             var radius = calcPropRadius(props[attribute]);
             PropLayer.setRadius(radius);
 
-            //build popup content of the country
-            var popupContent = "<p><b>City:</b> " + props['City'] + "</p>";
-
             //add formatted attribute to popup content string
             var year = attribute;
-            popupContent += "<p><b>Number of Migrants Living in " + props['City'] + ' in ' + year + ":</b> " + (Math.floor(props[attribute]*100)/100) + " </p>";
+           
+            createPopup(props, attribute, PropLayer, radius);
+
             //bind the popup to the circle marker
             //this math function rounds the values
-
-            //replace the layer popup
-            PropLayer.bindPopup(popupContent, {
-                offset: new L.Point(0,-radius)
-            });
         };
         });
     };
@@ -163,10 +158,8 @@ function calcPropRadius(attValue) {
     return radius;
 };
 
-
-
 //Function to add circle markers for point
-function createPropSymbols(data,map, attributes){
+function createPropSymbols(data,migrants, attributes){
     //will create a GeoJSOn layer via leaflet and add it to the map
     L.geoJson(data, {
         pointToLayer: function(feature, latlng){
@@ -175,17 +168,14 @@ function createPropSymbols(data,map, attributes){
         }
             //changes the point features of lat lon into point features
 
-            
-        }).addTo(map);
+        }).addTo(migrants);
     };
 
-
-
 //ACCESS THE DATA FUNCTION IS CALLED
-getData(map);
+getData(migrants);
 
 //////LESSON 3////////
-function createSequenceControls(map, attributes){
+function createSequenceControls(migrants, attributes){
     //create a range input element (the slider)
     $('#panel').append("<input class='range-slider' type='range'>");
 
@@ -213,7 +203,7 @@ function createSequenceControls(map, attributes){
     $('.range-slider').on('input', function(){
         //Step 6: get the new index value
         var index = $(this).val();
-        updatePropSymbols(map, attributes[index]);
+        updatePropSymbols(migrants, attributes[index]);
 
     });
 
@@ -235,7 +225,7 @@ function createSequenceControls(map, attributes){
 
         //Step 8: update slider
         $('.range-slider').val(index);
-        updatePropSymbols(map, attributes[index]);
+        updatePropSymbols(migrants, attributes[index]);
     });
 };
 
@@ -259,7 +249,7 @@ return attributes
 };
 
 //function to retrieve GeoJSON data and place it on the map
-function getData(map){
+function getData(migrants){
     //load the data
     $.ajax("data/Foreigners.geojson",{
         datatype: 'json',
@@ -268,9 +258,9 @@ function getData(map){
             
             var attributes = processData(response);
             
-            createPropSymbols(response,map, attributes);
+            createPropSymbols(response,migrants, attributes);
           
-            createSequenceControls(map, attributes);
+            createSequenceControls(migrants, attributes);
             
         }
     });
@@ -285,7 +275,7 @@ var baseMaps = {
 };
 
 var overlayMaps = {
-    'Proportional Symbols' : PropLayer
+    'Migrants' : migrants
     /*'Choropleth' : ChorLayer*/
 };
 //creates a dictionary of the map layers to be overlayed 
