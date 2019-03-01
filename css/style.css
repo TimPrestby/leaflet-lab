@@ -23,11 +23,22 @@
     .range-slider {
         width: 50%;
     }
+    .range-slider1{
+        width: 50%;
+    }
     
     #forward {
         float: right;
     }
+
+    #forward1 {
+        float: right;
+    }
     
     #reverse {
+        float: left;
+    }
+
+    #reverse1 {
         float: left;
     }
