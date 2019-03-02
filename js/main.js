@@ -44,17 +44,11 @@ var map = L.map('map',{
     layers: [light]
 });
 
-
-
-//Initialize leaflet map
-
-   
+//Initialize leaflet map 
     
 //define Thematic map layers 
 
 var migrants= new L.LayerGroup();
-
-var layer;
 
 var average = new L.LayerGroup();
 
@@ -178,23 +172,38 @@ function calcPropRadius(attValue) {
     return radius;
 };
 
+
+
 //Function to add circle markers for point
 function createPropSymbols(data,layer, attributes){
+    
+    if(attributes.includes('2010')==true){
     //will create a GeoJSOn layer via leaflet and add it to the map
-    L.geoJson(data, {
-        pointToLayer: function(feature, latlng){
+    L.geoJson(data, 
+        pointToLayer, function(feature, latlng){
+           
             //reference an anonymous function that will allow for calling paramaters of choice
             return pointToLayer(feature, latlng, attributes);
-        }
-            //changes the point features of lat lon into point features
+        },
+        ).addTo(migrants);} else {
 
-        }).addTo(migrants);
+            L.geoJson(data, 
+                pointToLayer, function(feature, latlng){
+                    //reference an anonymous function that will allow for calling paramaters of choice
+                    
+                    return pointToLayer(feature, latlng, attributes);
+                },
+                ).addTo(average);
+        }
     };
 
 //ACCESS THE DATA FUNCTION IS CALLED
 getData(migrants);
+getData(average);
 
 //////LESSON 3////////
+/*
+
 function createSequenceControls(layer, attributes){
     //create a range input element (the slider)
     $('#panel').append("<input class='range-slider' type='range'>");
@@ -301,29 +310,31 @@ function createSequenceControls(layer, attributes){
 };
 
 };
-
+*/
 
 //Function to process the sequential data//
 
-function processData(data){
+function processData(data,layer){
 var attributes = [];
 //set empty array
 
 var properties = data.features[0].properties ;
-
-for (var attribute in properties){
-    if (attribute.indexOf(20) > -1){
+if (layer == migrants){
+    for (var attribute in properties){
+   
+        if(attribute.includes(':') == false){
         //will get all attributes with prefix 20
-        attributes.push(attribute);
-        return attributes
-    } else {
-        (attribute.indexOf('Prop') > -1);
+        attributes.push(attribute)}}
+    return attributes
+} else {
+    for (var attribute in properties){
+
+        if(attribute.indexOf(':') > -1){
             //will get all attributes with prefix 20
-            attributes1.push(attribute);
-            return attributes
+            attributes.push(attribute)}}
+    return attributes
             
-        };
-    }
+    };
 };
 
 
@@ -337,10 +348,15 @@ function getData(layer){
         success: function(response){
                 //set callback function
             
-            var attributes = processData(response);
-            
+            var attributes = processData(response,layer);
+         
             createPropSymbols(response,layer, attributes);
           
+            ///////*Working up to here*/ ///////
+
+
+
+
             createSequenceControls(layer, attributes);
             
         }
