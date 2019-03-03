@@ -2,8 +2,6 @@
 
 //Create variable attribute that can be accessed globally 
 
-var attributes;
-
 //set two basemap styles to be used later
 var light =  L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
     //z is the zoom level
@@ -59,12 +57,18 @@ function Popup(properties,attribute,layer,radius) {
     this.attribute = attribute;
     this.layer = layer;
     this.year = attribute;
+   
+
+    if (attribute.includes(':')==false){
     this.migrants = this.properties[attribute];
     this.content="<p><b>City:</b> " + this.properties['City'] + "</p><p><b>Number of Migrants Living in " + this.year + ":</b> " + (Math.floor(properties[attribute]*100)/100) + " </p>";
+    } else {
      //bind the popup to the circle marker
     //this math function rounds the values
-    this.content="<p><b>City:</b> " + this.properties['City'] + "</p><p><b>Total percent of migrants in " + this.year + ":</b> " + (Math.floor(properties[attribute]*100)/100) + " </p>";
+    this.average =this.properties[attribute];
 
+    this.content="<p><b>City:</b> " + this.properties['City'] + "</p><p><b>Total percent of migrants in " + this.year + ":</b> " + (Math.floor(properties[attribute]*100)/100) + " </p>";
+    };
     
     this.bindToLayer =function(){
     this.layer.bindPopup(this.content, {
@@ -76,9 +80,12 @@ function Popup(properties,attribute,layer,radius) {
 };
 };
 //function to convert markers to circle markers
-function pointToLayer(feature, latlng, attributes,){     
+function pointToLayer(feature, latlng, attributes){    
     //Set marker options 
+
+    if(attributes[0].includes(':')==false){
     var attribute = attributes[0];
+
     var options = {
         radius: 8,
         fillColor: 'none',
@@ -87,8 +94,10 @@ function pointToLayer(feature, latlng, attributes,){
         opacity: 1,
         fillOpacity: 0.5
     };
+} else {
+    var attribute = attributes[1];
 
-    var style = {
+    var options = {
         radius: 8,
         fillColor: "#293542",
         color: "#293542",
@@ -96,12 +105,12 @@ function pointToLayer(feature, latlng, attributes,){
         opacity: 1,
         fillOpacity: 0.5
     };
+}
  
-
     //For each feature, get the value for the attribute
     var attValue = Number(feature.properties[attribute]);
-
     //Assign radius based on attribute value
+    console.log(attValue)
     options.radius=calcPropRadius(attValue);
 
     //creates the circle marker layer
@@ -128,18 +137,18 @@ function pointToLayer(feature, latlng, attributes,){
 };
 
 
-/*Fix here*/
 
 //Function to resize the proportional symbols according to attribute values
-function updatePropSymbols(layer, attribute){
+function updatePropSymbols(layer, attribute, attributes){
+
     map.eachLayer(function(layer){
         if (layer.feature && layer.feature.properties[attribute]){
             //update the layer style and popup
             
             var props = layer.feature.properties;
-
+    
             //update each feature's radius based on new attribute values
-            var radius = calcPropRadius(props[attribute]);
+            var radius = calcPropRadius(props[attribute],attributes);
             layer.setRadius(radius);
 
             //add formatted attribute to popup content string
@@ -158,11 +167,17 @@ function updatePropSymbols(layer, attribute){
 
 //function to calculate the radius of each proportional symbol
 function calcPropRadius(attValue) {
+
+    if(attValue > 100){
+
     //scale factor to adjust symbol size evenly
     var scaleFactor = .01;
     //area based on attribute value and scale factor
+    } else {
 
-    //var scaleFactor=300
+    
+    var scaleFactor=300;
+}
 
 
     var area = attValue * scaleFactor;
@@ -177,35 +192,38 @@ function calcPropRadius(attValue) {
 //Function to add circle markers for point
 function createPropSymbols(data,layer, attributes){
     
-    if(attributes.includes('2010')==true){
+    if(attributes[0].includes(':')==true){
     //will create a GeoJSOn layer via leaflet and add it to the map
-    L.geoJson(data, 
-        pointToLayer, function(feature, latlng){
-           
+    L.geoJson(data, { pointToLayer: function(feature, latlng){
             //reference an anonymous function that will allow for calling paramaters of choice
+           
             return pointToLayer(feature, latlng, attributes);
-        },
-        ).addTo(migrants);} else {
-
-            L.geoJson(data, 
-                pointToLayer, function(feature, latlng){
-                    //reference an anonymous function that will allow for calling paramaters of choice
-                    
-                    return pointToLayer(feature, latlng, attributes);
-                },
-                ).addTo(average);
         }
+    }).addTo(average)
+    
+        } else {
+            L.geoJson(data, { pointToLayer: function(feature, latlng){
+                  
+                    //reference an anonymous function that will allow for calling paramaters of choice
+                    return pointToLayer(feature, latlng, attributes);
+                }
+                }).addTo(migrants)
+           
+        };
     };
 
 //ACCESS THE DATA FUNCTION IS CALLED
 getData(migrants);
 getData(average);
 
-//////LESSON 3////////
-/*
+//////Create slider and responsiveness////////
+
 
 function createSequenceControls(layer, attributes){
+    console.log(attributes)
+    if(attributes.includes('City:')==false){
     //create a range input element (the slider)
+
     $('#panel').append("<input class='range-slider' type='range'>");
 
     //set slider attributes
@@ -256,8 +274,7 @@ function createSequenceControls(layer, attributes){
         $('.range-slider').val(index);
         updatePropSymbols(layer, attributes[index]);
     });
-
-
+    } else {
     $('#panel').append("<input class='range-slider1' type='range'>");
 
     //set slider attributes
@@ -285,7 +302,7 @@ function createSequenceControls(layer, attributes){
         //Step 6: get the new index value
         var index = $(this).val();
         updatePropSymbols(layer, attributes[index]);
-
+        
     });
 
     //Step 5: click listener for buttons
@@ -306,11 +323,13 @@ function createSequenceControls(layer, attributes){
 
         //Step 8: update slider
         $('.range-slider1').val(index);
+        updatePropSymbols(layer, attributes[index]);
+
     });
 };
 
 };
-*/
+
 
 //Function to process the sequential data//
 
@@ -347,15 +366,10 @@ function getData(layer){
         datatype: 'json',
         success: function(response){
                 //set callback function
-            
             var attributes = processData(response,layer);
-         
+
             createPropSymbols(response,layer, attributes);
-          
             ///////*Working up to here*/ ///////
-
-
-
 
             createSequenceControls(layer, attributes);
             
@@ -363,6 +377,8 @@ function getData(layer){
     });
 };
 
+
+function createMap() {
 //control the layers
 
 var baseMaps = {
@@ -377,7 +393,7 @@ var overlayMaps = {
 };
 //creates a dictionary of the map layers to be overlayed 
 
-function createMap() {
+
 
 L.control.layers(baseMaps, overlayMaps, true, true).addTo(map)};
 
