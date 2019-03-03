@@ -216,117 +216,103 @@ function createPropSymbols(data,layer, attributes){
 getData(migrants);
 getData(average);
 
+
+function createLegend(map, attributes){
+    var LegendControl = L.Control.extend({
+        options: {
+            position: 'bottomleft'
+        },
+
+        onAdd: function (map) {
+            // create the control container with a particular class name
+            var container = L.DomUtil.create('div', 'legend-control-container');
+
+            //PUT YOUR SCRIPT TO CREATE THE TEMPORAL LEGEND HERE
+
+            return container;
+        }
+    });
+
+    map.addControl(new LegendControl());
+};
+
 //////Create slider and responsiveness////////
 
-
 function createSequenceControls(layer, attributes){
-    console.log(attributes)
-    if(attributes.includes('City:')==false){
-    //create a range input element (the slider)
-
-    $('#panel').append("<input class='range-slider' type='range'>");
-
-    //set slider attributes
-    $('.range-slider').attr({
-        max: 8,
-        //Sets the number of slider values (starting and index 0)
-        min: 0,
-        //Sets the minimum number of slider values
-        value: 0,
-        //Sets the initial value of the slider bar
-        step: 1
-        //Sets what the slider will increment or decrement by
-    })
-
-    $('#panel').append('<button class="skip" id="reverse">Reverse</button>');
-    $('#panel').append('<button class="skip" id="forward">Skip</button>');
-    //Add buttons that provide additional sequence control
     
-    $('#reverse').html('<img src="img/backward.png">');
-    $('#forward').html('<img src="img/forward.png">');
-    //Style the buttons
+    var SequenceControl = L.Control.extend ({
+        //Sequence Control is a new class to create sequence controls
+        //Extend extends the parent class to the child class to inherit all methods and properties
+        options: {
+            position: 'bottomleft'
+            //sets the position of the sequence controls
+        },
 
-    //event listener for the slider
-    $('.range-slider').on('input', function(){
-        //Step 6: get the new index value
-        var index = $(this).val();
-        updatePropSymbols(layer, attributes[index]);
-
-    });
-
-    //Step 5: click listener for buttons
-    $('.skip').click(function(){
-        //get the old index value
-        var index = $('.range-slider').val();
-
-        //Step 6: increment or decrement depending on button clicked
-        if ($(this).attr('id') == 'forward'){
-            index++;
-            //Step 7: if past the last attribute, wrap around to first attribute
-            index = index > 8 ? 0 : index;
-        } else if ($(this).attr('id') == 'reverse'){
-            index--;
-            //Step 7: if past the first attribute, wrap around to last attribute
-            index = index < 0 ? 8 : index;
-        };
-
-        //Step 8: update slider
-        $('.range-slider').val(index);
-        updatePropSymbols(layer, attributes[index]);
-    });
-    } else {
-    $('#panel').append("<input class='range-slider1' type='range'>");
-
-    //set slider attributes
-    $('.range-slider1').attr({
-        max: 8,
-        //Sets the number of slider values (starting and index 0)
-        min: 0,
-        //Sets the minimum number of slider values
-        value: 0,
-        //Sets the initial value of the slider bar
-        step: 1
-        //Sets what the slider will increment or decrement by
-    })
-
-    $('#panel').append('<button class="skip1" id="reverse1">Reverse</button>');
-    $('#panel').append('<button class="skip1" id="forward1">Skip</button>');
-    //Add buttons that provide additional sequence control
-    
-    $('#reverse1').html('<img src="img/backward.png">');
-    $('#forward1').html('<img src="img/forward.png">');
-    //Style the buttons
-
-    //event listener for the slider
-    $('.range-slider1').on('input', function(){
-        //Step 6: get the new index value
-        var index = $(this).val();
-        updatePropSymbols(layer, attributes[index]);
+         onAdd: function (map) {
+        //onAdd creates an HTML element that the leaflet control, its child elements, attributes, and event listeners will be wrapped within
         
-    });
+        var container = L.DomUtil.create('div', 'sequence-control-container');
+        //Create a div element with a class
 
-    //Step 5: click listener for buttons
-    $('.skip1').click(function(){
-        //get the old index value
-        var index = $('.range-slider1').val();
+        //create a range input element (the slider)
+        $(container).append("<input class='range-slider' type='range'>");
 
-        //Step 6: increment or decrement depending on button clicked
-        if ($(this).attr('id') == 'forward1'){
-            index++;
-            //Step 7: if past the last attribute, wrap around to first attribute
-            index = index > 8 ? 0 : index;
-        } else if ($(this).attr('id') == 'reverse1'){
-            index--;
-            //Step 7: if past the first attribute, wrap around to last attribute
-            index = index < 0 ? 8 : index;
-        };
+        $('.range-slider').attr({
+            max: 8,
+            //Sets the number of slider values (starting and index 0)
+            min: 0,
+            //Sets the minimum number of slider values
+            value: 0,
+            //Sets the initial value of the slider bar
+            step: 1
+            //Sets what the slider will increment or decrement by
+        })
+    
+        $(container).append('<button class="skip" id="reverse" title="Reverse">Reverse</button>');
+        $(container).append('<button class="skip" id="forward" title="Forward">Skip</button>');
 
-        //Step 8: update slider
-        $('.range-slider1').val(index);
-        updatePropSymbols(layer, attributes[index]);
+        //Add buttons that provide additional sequence control
+        
+        
+        $('#reverse').html('<img src="img/backward.png">');
+        $('#forward').html('<img src="img/forward.png">');
+        //Style the buttons
+    
+        //event listener for the slider
+        $('.range-slider').on('input', function(){
+            //Step 6: get the new index value
+            var index = $(this).val();
+            updatePropSymbols(layer, attributes[index]);
+    
+        });
+    
+        //Click listener for buttons
+        $('.skip').click(function(){
+            //get the old index value
+            var index = $('.range-slider').val();
+    
+            //Step 6: increment or decrement depending on button clicked
+            if ($(this).attr('id') == 'forward'){
+                index++;
+                //Step 7: if past the last attribute, wrap around to first attribute
+                index = index > 8 ? 0 : index;
+            } else if ($(this).attr('id') == 'reverse'){
+                index--;
+                //Step 7: if past the first attribute, wrap around to last attribute
+                index = index < 0 ? 8 : index;
+            };
+    
+            //Step 8: update slider
+            $('.range-slider').val(index);
+            updatePropSymbols(layer, attributes[index]);
+        });
 
-    });
-};
+        L.DomEvent.disableClickPropagation(container);
+        //Disable the mouse event listener for the container
+        return container;
+    }
+}); 
+map.addControl(new SequenceControl());
 
 };
 
@@ -334,6 +320,10 @@ function createSequenceControls(layer, attributes){
 //Function to process the sequential data//
 
 function processData(data,layer){
+var min = Infinity
+var max =-Infinity 
+
+//define variables to be used in the legend.
 var attributes = [];
 //set empty array
 
@@ -343,7 +333,8 @@ if (layer == migrants){
    
         if(attribute.includes(':') == false){
         //will get all attributes with prefix 20
-        attributes.push(attribute)}}
+        attributes.push(attribute)}
+    }
     return attributes
 } else {
     for (var attribute in properties){
@@ -370,6 +361,8 @@ function getData(layer){
 
             createPropSymbols(response,layer, attributes);
             ///////*Working up to here*/ ///////
+
+            createLegend()
 
             createSequenceControls(layer, attributes);
             
