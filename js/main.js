@@ -86,7 +86,6 @@ function pointToLayer(feature, latlng, attributes){
 
     //Save circle layers using the Cityname as the reference for filter
     circleLayers[feature.properties['City:']]=layer
-    console.log(layer)
     //return the circle marker to the L.geoJson pointToLayer option
     return layer;
 }
@@ -130,9 +129,7 @@ function createPropSymbols(data,map, attributes){
 
 //Function to update filter
 function updateFilter(map,attribute,lowerLimit,upperLimit){
-    console.log(circleLayers)
     for (layer in circleLayers){
-        console.log(layer)
         //Ensure that the layer has feature and properties so null is not returned
         if (circleLayers[layer].feature && circleLayers[layer].feature.properties[attribute]){
             //Determine if the circleLayer is above the lower limit AND under the upper limit
@@ -179,14 +176,19 @@ function createControls(map, attributes){
         onAdd: function (map) {
         //Create a div element with an assigned class
         var container = L.DomUtil.create('div', 'sequence-control-container');
-        //Create a range input element (Temporal slider)
-        $(container).append("<input class='range-slider' type='range'>");
+        $(container).append("<span id='currentYear'>")
         //Add buttons that provide additional sequence control
         $(container).append('<button class="skip" id="reverse">Reverse</button>');
+        //Create a range input element (Temporal slider)
+        $(container).append("<input class='range-slider' type='range'>");
         $(container).append('<button class="skip" id="forward">Skip</button>');
-        //Create filter sliders for upper and lower limits
+        //Create Responsive filter display for lower limit
+        $(container).append("<span id='lowerLimit'>")
+        //Create filter sliders lower limits
         $(container).append("<input class='lowerLimit-slider' type='range'>")
         $(container).append("<input class='upperLimit-slider' type='range'>")
+        $(container).append("<span id='upperLimit'>")
+
         //Kill any mouse event doubleclick listeners on the map
         $(container).on('mousedown dblclick', function(e){
             L.DomEvent.stopPropagation(e);
@@ -209,6 +211,8 @@ function createControls(map, attributes){
             //Sets what the slider will increment or decrement by
             step: 1
         });
+        //Set the current year of the slider start
+        $('#currentYear').html(2009)
         //Style the buttons
         $('#reverse').html('<img src="img/backward.png">');
         $('#forward').html('<img src="img/forward.png">');
@@ -216,6 +220,9 @@ function createControls(map, attributes){
         $('.range-slider').on('input', function(){
             //Add display of year
             var index = $(this).val();
+            //Converts the index into a number
+            index++;
+            index--;
             $('#currentYear').html(2009+index-1)
             // Call the filter function to get the updated layers
             updateFilter(map, attributes[$('.range-slider').val()], $('.lowerLimit-slider').val(), $('.upperLimit-slider').val());
