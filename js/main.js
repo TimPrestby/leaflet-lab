@@ -58,9 +58,9 @@ function pointToLayer(feature, latlng, attributes){
         radius: 8,
         fillColor: '#36454f',
         color: "#000",
-        weight: 3,
+        weight: 2,
         opacity: 1,
-        fillOpacity: 0.5,
+        fillOpacity: 0.25,
     };
     //For each feature, get the value for the attribute in form of number so it can be used in a calculation
     var attValue = Number(feature.properties[attribute]);
@@ -104,6 +104,8 @@ function updatePropSymbols(map, attribute){
             popup.bindToLayer();
         };
     });
+    //Update sequence legend
+	updateLegend(map, attribute);
 };
 
 //Function to calculate the radius of each proportional symbol//
@@ -146,22 +148,106 @@ function updateFilter(map,attribute,lowerLimit,upperLimit){
 
 //Function to create an updating legend//
 function createLegend(map, attributes){
-    var LegendControl = L.Control.extend({
-        options: {
-            position: 'bottomleft'
-        },
+	var LegendControl = L.Control.extend({
+		options: {
+			position: 'bottomright'
+		},
 
-        onAdd: function (map) {
-            // Create the control container with a particular class name
-            var container = L.DomUtil.create('div', 'legend-control-container');
+		onAdd: function (map) {
+			// create the control container with a particular class name
+			var container = L.DomUtil.create('div', 'legend-control-container');
 
-            //PUT YOUR SCRIPT TO CREATE THE TEMPORAL LEGEND HERE
+			//add temporal legend div to container
+			$(container).append('<div id="temporal-legend">')
 
-            return container;
-        }
-    });
+			//start attribute legend svg string
+			var svg = '<svg id="attribute-legend" width="250px" height="160px" y="200">';
+
+			//Array to base loop on
+			var circles = {
+				max: 15,
+				mean: 50,
+				min: 105
+			};
+
+			//loop to add each circle and text to svg string
+			for (var circle in circles){
+				//circle string
+				svg += '<circle class="legend-circle" cx="90" cy="50" id="' + circle + '" fill="#36454f" fill-opacity="0.25" stroke="#000000" cx="40"/>';
+
+				//text string
+				svg += '<text id="' + circle + '-text" x="155" y="' + circles[circle] + '"></text>';
+			};
+
+			//close svg string
+			svg += "</svg>";
+
+			//add attribute legend svg to container
+			$(container).append(svg);
+
+			return container;
+		}
+	});
+
 
     map.addControl(new LegendControl());
+
+};
+
+//Update the legend with new attribute
+function updateLegend(map, attribute){
+       //create Content for legend
+	var year = attribute;
+	var content = "Proportion of Migrants in the Total Population in" + year;
+
+	//replace legend content
+	$('#temporal-legend').html(content);
+
+	var circleValues = getCircleValues(map, attribute);
+
+	for (var key in circleValues){
+		//Get the radius
+		var radius = calcPropRadius(circleValues[key]);
+
+		$('#'+key).attr({
+			cy: 140 - radius,
+			r: radius
+		});
+
+		$('#'+key+'-text').text(Math.round(circleValues[key]*100)/100 + " percent");
+	};
+};
+
+function getCircleValues(map, attribute){
+	//Start with min at highest possible and max at lowest possible number
+	var min = Infinity,
+		max = -Infinity;
+
+	map.eachLayer(function(layer){
+		//Get the attribute value
+		if (layer.feature){
+			var attributeValue = Number(layer.feature.properties[attribute]);
+		};
+
+		//Test for min
+		if (attributeValue < min){
+			min = attributeValue;
+		};
+
+		//Test for max
+		if (attributeValue > max){
+			max = attributeValue;
+		};
+	});
+
+	//Get mean
+	var mean = (max + min) / 2;
+	
+	return {
+		max: max,
+		mean: mean,
+		min: min
+	};
 };
 
 //Function to Create slider//
@@ -256,7 +342,6 @@ function createControls(map, attributes){
             updatePropSymbols(map, attributes[index]);
         });
 
-
         //Define attributes of filter sliders of lower limit
         $('.lowerLimit-slider').attr({
             max: 41,
@@ -300,6 +385,7 @@ function processData(data){
 //Set empty array to be filled with attributes
 var attributes = [];
 //Set properties to be the properties per feature which then contain all the attributes
+    console.log(data.features)
 var properties = data.features[0].properties;
 //Run for loop to get all of the attributes which will be used as indexing tool later
     for (var attribute in properties){
@@ -322,9 +408,11 @@ function getData(map){
             var attributes = processData(response);
             //Call Create Proportional Symbol function
             createPropSymbols(response,map, attributes);
-            /*createLegend()*/
             //Call create sequence controls function
             createControls(map, attributes);     
+            //Create Legend
+            createLegend(map, attributes);
+
         }
     });
 };
