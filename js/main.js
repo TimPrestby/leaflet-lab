@@ -5,7 +5,7 @@ function createMap(){
 
 var map = L.map('map',{
 //Sets the longitude and latitude of where the map center is
-    center: [50.556071, 11.580791],
+    center: [51, 12],
     zoom: 5,
 });
 
@@ -83,7 +83,6 @@ function pointToLayer(feature, latlng, attributes){
         }
         //Close the popup when no longer mousing over
     });
-
     //Save circle layers using the Cityname as the reference for filter
     circleLayers[feature.properties['City:']]=layer
     //return the circle marker to the L.geoJson pointToLayer option
@@ -104,7 +103,7 @@ function updatePropSymbols(map, attribute){
             popup.bindToLayer();
         };
     });
-    //Update sequence legend
+    //Update sequence legend once the layers are updated
 	updateLegend(map, attribute);
 };
 
@@ -145,6 +144,27 @@ function updateFilter(map,attribute,lowerLimit,upperLimit){
         };
     };
 };
+//Function to create a title//
+function createTitle(map){
+//Create WaterMark for Title
+L.Control.Watermark = L.Control.extend({
+    onAdd: function(map) {
+        //Create new image variable to hold image
+        var img = L.DomUtil.create('img');
+        //Set image path
+        img.src = '../img/Title.png';
+        //Set Image width
+        img.style.width = '35vw';
+        return img;
+    },
+});
+//Set new image
+L.control.watermark = function(opts) {
+    return new L.Control.Watermark(opts);
+}
+//Position new image
+L.control.watermark({ position: 'topleft' }).addTo(map);
+};
 
 //Function to create an updating legend//
 function createLegend(map, attributes){
@@ -154,95 +174,82 @@ function createLegend(map, attributes){
 		},
 
 		onAdd: function (map) {
-			// create the control container with a particular class name
+			//Create the control container with a particular class name
 			var container = L.DomUtil.create('div', 'legend-control-container');
-
-			//add temporal legend div to container
+			//Add temporal legend div to container
 			$(container).append('<div id="temporal-legend">')
-
-			//start attribute legend svg string
+			//Start attribute legend svg string to further be manipulated below 
 			var svg = '<svg id="attribute-legend" width="250px" height="160px" y="200">';
-
-			//Array to base loop on
+			//Array to base loop on of legend
 			var circles = {
 				max: 15,
 				mean: 50,
 				min: 105
 			};
-
-			//loop to add each circle and text to svg string
+			//Loop to add each circle and text to svg string
 			for (var circle in circles){
-				//circle string
+				//Creates circle string object
 				svg += '<circle class="legend-circle" cx="90" cy="50" id="' + circle + '" fill="#36454f" fill-opacity="0.25" stroke="#000000" cx="40"/>';
 
-				//text string
+				//Creates text string object
 				svg += '<text id="' + circle + '-text" x="155" y="' + circles[circle] + '"></text>';
 			};
-
-			//close svg string
+			//Close the svg string
 			svg += "</svg>";
-
-			//add attribute legend svg to container
+			//Add attribute legend svg to container
 			$(container).append(svg);
-
 			return container;
 		}
 	});
-
-
     map.addControl(new LegendControl());
-
 };
 
 //Update the legend with new attribute
 function updateLegend(map, attribute){
-       //create Content for legend
+    //Create Content for legend using the year and text
 	var year = attribute;
-	var content = "Proportion of Migrants in the Total Population in" + year;
-
-	//replace legend content
+	var content = "Proportion of Migrants Per City Population in" + year;
+	//Replace legend content with updated content
 	$('#temporal-legend').html(content);
-
+    //Assign variable to get the values of the circles by calling getCircleValues function
 	var circleValues = getCircleValues(map, attribute);
-
+    //Run through each key in the array/dictionary to get the values
 	for (var key in circleValues){
-		//Get the radius
+		//Get the radius by calling calcPropRadius
 		var radius = calcPropRadius(circleValues[key]);
-
+        //Select the id corresponding to each key and give it new attributes for position and radius
 		$('#'+key).attr({
 			cy: 140 - radius,
 			r: radius
 		});
-
-		$('#'+key+'-text').text(Math.round(circleValues[key]*100)/100 + " percent");
+        //Create an updating display of what the proportional symbols represent
+		$('#'+key+'-text').text(Math.round(circleValues[key]*100)/100 + " %");
 	};
 };
 
+//Function to determine the legend circle values 
 function getCircleValues(map, attribute){
 	//Start with min at highest possible and max at lowest possible number
 	var min = Infinity,
 		max = -Infinity;
-
+    //For each layer on the map, figure out the attribute value
 	map.eachLayer(function(layer){
 		//Get the attribute value
 		if (layer.feature){
 			var attributeValue = Number(layer.feature.properties[attribute]);
 		};
-
 		//Test for min
 		if (attributeValue < min){
 			min = attributeValue;
 		};
-
 		//Test for max
 		if (attributeValue > max){
 			max = attributeValue;
 		};
 	});
-
 	//Get mean
-	var mean = (max + min) / 2;
-	
+    var mean = (max + min) / 2;
+    //Return a dictionary that can be references by its key
 	return {
 		max: max,
 		mean: mean,
@@ -274,7 +281,6 @@ function createControls(map, attributes){
         $(container).append("<input class='lowerLimit-slider' type='range'>")
         $(container).append("<input class='upperLimit-slider' type='range'>")
         $(container).append("<span id='upperLimit'>")
-
         //Kill any mouse event doubleclick listeners on the map
         $(container).on('mousedown dblclick', function(e){
             L.DomEvent.stopPropagation(e);
@@ -370,7 +376,6 @@ function createControls(map, attributes){
         
         // Add text to display current value of the upper limit
         $('#upperLimit').html($('.upperLimit-slider').val() + "%");
-        
         // Add an event listener for the slider
         $('.upperLimit-slider').on('input', function(){
             // Update visible cities
@@ -379,13 +384,11 @@ function createControls(map, attributes){
         }); 
 };
 
-
 //Function to process the sequential data//
 function processData(data){
 //Set empty array to be filled with attributes
 var attributes = [];
 //Set properties to be the properties per feature which then contain all the attributes
-    console.log(data.features)
 var properties = data.features[0].properties;
 //Run for loop to get all of the attributes which will be used as indexing tool later
     for (var attribute in properties){
@@ -410,8 +413,12 @@ function getData(map){
             createPropSymbols(response,map, attributes);
             //Call create sequence controls function
             createControls(map, attributes);     
-            //Create Legend
+            //Call create Legend function
             createLegend(map, attributes);
+            //Ensures that the legend loads with the first map initialization
+            updateLegend(map, attributes[1]);
+            //Creates Title
+            createTitle(map)
 
         }
     });

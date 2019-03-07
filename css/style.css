@@ -1,8 +1,8 @@
 /*Stylesheet by Timothy Prestby 2019*/
     /*////////////////ID STYLES////////////*/
     #map{
-        height: 100vh;
-        width: 100vw;
+        height: 99.5vh;
+        width: 99.99vw;
         display: inline-block;
     }
 
@@ -23,7 +23,7 @@
 
     .legend-control-container {
         width: 300px;
-        height: 22.5vh;
+        height: 30vh;
         background-color: rgba(255,255,255,0.8);
         padding: 10px;
         line-height: 45px;
@@ -81,7 +81,6 @@
         display: inline-block;
         font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
         font-size: 2em;
-        padding-bottom:15px;
 
     }
     
