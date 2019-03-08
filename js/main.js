@@ -166,6 +166,29 @@ L.control.watermark = function(opts) {
 L.control.watermark({ position: 'topleft' }).addTo(map);
 };
 
+
+//Function to get supplementary info//
+function createText(map){
+    var metadata = L.Control.extend({
+        options: {
+            position: 'topright'
+        },
+    onAdd: function (map) {
+        //Create the control container with a particular class name
+		var container = L.DomUtil.create('div', 'meta-container');
+        //Add Citation Information
+        var context ="<p id='text'> Data from European Union's Eurostat Data Portal. <br> Watermark and Map Created by Timothy Prestby <br> March 8, 2019 | Geography 575 | Lab 1 </p>";
+        $(container).append(context)
+
+        return container;
+
+        }
+    
+    });
+    map.addControl(new metadata());
+
+};
+
 //Function to create an updating legend//
 function createLegend(map, attributes){
 	var LegendControl = L.Control.extend({
@@ -224,7 +247,9 @@ function updateLegend(map, attribute){
 		});
         //Create an updating display of what the proportional symbols represent
 		$('#'+key+'-text').text(Math.round(circleValues[key]*100)/100 + " %");
-	};
+    };
+    
+    
 };
 
 //Function to determine the legend circle values 
@@ -419,6 +444,8 @@ function getData(map){
             updateLegend(map, attributes[1]);
             //Creates Title
             createTitle(map)
+            //Creates text
+            createText(map)
 
         }
     });
