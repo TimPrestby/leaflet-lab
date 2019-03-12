@@ -76,12 +76,10 @@ function pointToLayer(feature, latlng, attributes){
     layer.on({
         mouseover: function(){
             this.openPopup();
-        },
-        //Open the popup when mousing over in desktop view
+        },     
         mouseout: function(){
             this.closePopup();
-        }
-        //Close the popup when no longer mousing over
+        }    
     });
     //Save circle layers using the Cityname as the reference for filter
     circleLayers[feature.properties['City:']]=layer
@@ -137,6 +135,7 @@ function updateFilter(map,attribute,lowerLimit,upperLimit){
             if(circleLayers[layer].feature.properties[attribute] >= lowerLimit && circleLayers[layer].feature.properties[attribute] <= upperLimit){
                 //Add the circle layer to the map
                 map.addLayer(circleLayers[layer]);    
+                updatePropSymbols(map, attribute)
             } else {
                 //Remove layers that do not meet the limits
                 map.removeLayer(circleLayers[layer]);
@@ -388,6 +387,7 @@ function createControls(map, attributes){
         $('.lowerLimit-slider').on('input', function(){
             // Update circle layers
             updateFilter(map, attributes[$('.range-slider').val()], $('.lowerLimit-slider').val(), $('.upperLimit-slider').val());
+
             $('#lowerLimit').html($('.lowerLimit-slider').val() + "%");
         });
                 
@@ -405,6 +405,7 @@ function createControls(map, attributes){
         $('.upperLimit-slider').on('input', function(){
             // Update visible cities
             updateFilter(map, attributes[$('.range-slider').val()], $('.lowerLimit-slider').val(), $('.upperLimit-slider').val());
+
             $('#upperLimit').html($('.upperLimit-slider').val() + "%");
         }); 
 };
