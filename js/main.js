@@ -143,6 +143,8 @@ function updateFilter(map,attribute,lowerLimit,upperLimit){
         };
     };
 };
+
+
 //Function to create a title//
 function createTitle(map){
 //Create WaterMark for Title
@@ -379,7 +381,6 @@ function createControls(map, attributes){
             value: 2,
             step: 1
         });
-        
         // Add text to display current value of lowerlimit
         $('#lowerLimit').html($('.lowerLimit-slider').val() + "%");
         
@@ -389,8 +390,7 @@ function createControls(map, attributes){
             updateFilter(map, attributes[$('.range-slider').val()], $('.lowerLimit-slider').val(), $('.upperLimit-slider').val());
 
             $('#lowerLimit').html($('.lowerLimit-slider').val() + "%");
-        });
-                
+        });     
         //Define slider attributes
         $('.upperLimit-slider').attr({
             max: 41,
@@ -398,7 +398,6 @@ function createControls(map, attributes){
             value: 41,
             step: 1
         });
-        
         // Add text to display current value of the upper limit
         $('#upperLimit').html($('.upperLimit-slider').val() + "%");
         // Add an event listener for the slider
